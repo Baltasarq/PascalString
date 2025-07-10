@@ -8,31 +8,42 @@
 #include <stdlib.h>
 
 
-inline size_t pstr_len(const pstr *s)
+inline
+size_t pstr_len(const pstr *s)
 {
-    return (size_t) s->raw[ 0 ];
+    return (size_t) ( (unsigned char) s->raw[ 0 ] );
 }
 
-inline const char * pstr_to_cstr(const pstr *s)
+static inline
+void set_len(pstr *s, size_t len)
+{
+    s->raw[ 0 ] = (unsigned char) len;
+}
+
+inline
+const char * pstr_to_cstr(const pstr *s)
 {
     return s->raw + 1;
 }
 
-inline void pstr_destroy(pstr * s)
+inline
+void pstr_destroy(pstr * s)
 {
     free( s );
 }
 
-inline char pstr_get(const pstr *s, size_t pos)
+inline
+char pstr_get(const pstr *s, size_t pos)
 {
     if ( pos <= pstr_len( s ) ) {
-        return s->raw[ pos + 1 ];
+        return s->raw[ 1 + pos ];
     }
     
     return '\0';
 }
 
-inline pstr * pstr_create()
+inline
+pstr * pstr_create()
 {
     pstr * toret = (pstr *) malloc( sizeof( pstr ) );
     
@@ -57,10 +68,9 @@ pstr * pstr_copy(const pstr *s)
         strncpy(
             (char *) pstr_to_cstr( toret ),
             pstr_to_cstr( s ),
-            len );
+            len + 1 );
 
-        toret->raw[ 0 ] = (unsigned char) len;
-        toret->raw[ len + 1 ] = 0;
+        set_len( toret, len );
     }
     
     return toret;
@@ -79,9 +89,9 @@ pstr * pstr_create_from(const char * s)
         strncpy(
             (char *) pstr_to_cstr( toret ),
             s,
-            len );
+            len + 1 );
 
-        toret->raw[ 0 ] = (char) len;
+        set_len( toret, len );
     }
     
     return toret;
@@ -95,7 +105,7 @@ pstr * pstr_concat(const pstr *s1, const pstr *s2)
         size_t len_s1 = pstr_len( s1 );
         size_t len_s2 = pstr_len( s2 );
         size_t space_left = PSTR_MAX_CHARS - len_s1;
-        
+
         if ( len_s2 > space_left ) {
             len_s2 = space_left;
         }
@@ -105,7 +115,8 @@ pstr * pstr_concat(const pstr *s1, const pstr *s2)
             pstr_to_cstr( s2 ),
             len_s2 );
             
-        toret->raw[ 0 ] = len_s1 + len_s2;
+        toret->raw[ 1 + len_s1 + len_s2 ] = '\0';
+        set_len( toret, len_s1 + len_s2 );
     }
     
     return toret;
