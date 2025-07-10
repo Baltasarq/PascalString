@@ -8,7 +8,8 @@
 
 int main(int argc, char **argv)
 {
-    pstr * s1 = pstr_create_from( "Hola, " );
+    pstr * s0 = pstr_create_from( "Hola, " );
+    pstr * s1 = pstr_copy( s0 );
     pstr * s2 = pstr_create_from( "mundo!" );
     pstr * s3 = pstr_concat( s1, s2 );
     

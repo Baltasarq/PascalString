@@ -23,7 +23,9 @@ pstr * pstr_create();
 /** Free memory associated to s. */
 void pstr_destroy(pstr * s);
 
-/** @return a new Pascal string, being a copy of s. */
+/** @return a new Pascal string, being a copy of s,
+  *         or NULL, if the C string is too big.
+  */
 pstr * pstr_create_from(const char * s);
 
 /** @param pstr2 a string to copy.

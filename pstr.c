@@ -25,18 +25,20 @@ inline void pstr_destroy(pstr * s)
 
 inline char pstr_get(const pstr *s, size_t pos)
 {
-    if ( pos <= PSTR_MAX_CHARS ) {
+    if ( pos <= pstr_len( s ) ) {
         return s->raw[ pos + 1 ];
     }
     
-    return 0;
+    return '\0';
 }
 
-pstr * pstr_create()
+inline pstr * pstr_create()
 {
     pstr * toret = (pstr *) malloc( sizeof( pstr ) );
     
-    toret->raw[ 0 ] = toret->raw[ 1 ] = 0;
+    if ( toret != NULL ) {
+        toret->raw[ 0 ] = toret->raw[ 1 ] = 0;
+    }
     
     return toret;
 }
@@ -45,12 +47,21 @@ pstr * pstr_copy(const pstr *s)
 {
     pstr * toret = pstr_create();
     
-    strncpy(
-        (char *) pstr_to_cstr( toret ),
-        pstr_to_cstr( s ),
-        PSTR_MAX_CHARS );
+    if ( toret != NULL ) {
+        size_t len = pstr_len( s );
+        
+        if ( len > PSTR_MAX_CHARS ) {
+            len = PSTR_MAX_CHARS;
+        }
+        
+        strncpy(
+            (char *) pstr_to_cstr( toret ),
+            pstr_to_cstr( s ),
+            len );
 
-    toret->raw[ 0 ] = (unsigned char) pstr_len( s );
+        toret->raw[ 0 ] = (unsigned char) len;
+        toret->raw[ len + 1 ] = 0;
+    }
     
     return toret;
 }
@@ -58,15 +69,17 @@ pstr * pstr_copy(const pstr *s)
 pstr * pstr_create_from(const char * s)
 {
     size_t len = strlen( s );
-    pstr * toret = NULL;
+    pstr * toret = pstr_create();
     
-    if ( len <= PSTR_MAX_CHARS ) {
-        toret = pstr_create();
+    if ( toret != NULL ) {
+        if ( len > PSTR_MAX_CHARS ) {
+            len = PSTR_MAX_CHARS;
+        }
         
         strncpy(
             (char *) pstr_to_cstr( toret ),
             s,
-            PSTR_MAX_CHARS );
+            len );
 
         toret->raw[ 0 ] = (char) len;
     }
@@ -76,19 +89,23 @@ pstr * pstr_create_from(const char * s)
 
 pstr * pstr_concat(const pstr *s1, const pstr *s2)
 {
-    size_t target_len = pstr_len( s1 ) + pstr_len( s2 );
-    pstr * toret = NULL;
+    pstr * toret = pstr_create_from( pstr_to_cstr( s1 ) );
     
-    if ( target_len <= PSTR_MAX_CHARS ) {
-        toret = pstr_create_from( pstr_to_cstr( s1 ) );
-        size_t s1_len = pstr_len( toret );
+    if ( toret != NULL ) {
+        size_t len_s1 = pstr_len( s1 );
+        size_t len_s2 = pstr_len( s2 );
+        size_t space_left = PSTR_MAX_CHARS - len_s1;
+        
+        if ( len_s2 > space_left ) {
+            len_s2 = space_left;
+        }
         
         strncpy(
-            (char *) pstr_to_cstr( toret ) + s1_len,
+            (char *) pstr_to_cstr( toret ) + len_s1,
             pstr_to_cstr( s2 ),
-            PSTR_MAX_CHARS - s1_len );
+            len_s2 );
             
-        toret->raw[ 0 ] = s1_len + pstr_len( s2 );
+        toret->raw[ 0 ] = len_s1 + len_s2;
     }
     
     return toret;
